@@ -1,1 +1,33 @@
+import numpy as np
+import sounddevice as sd
+import soundfile as sf
 
+print(sd.query_devices())
+device = int(input("Enter the UMIK-1 input device number: "))
+
+rate = 48000
+duration = 30
+
+sd.check_input_settings(
+    device=device, channels=1, samplerate=rate, dtype="float32"
+)
+
+input("Press Enter to start recording...")
+print("Recording for 30 seconds.")
+
+audio = sd.rec(
+    int(duration * rate),
+    samplerate=rate,
+    channels=1,
+    dtype="float32",
+    device=device,
+)
+sd.wait()
+
+sf.write("umik1_30_seconds.wav", audio, rate, subtype="PCM_24")
+
+peak = float(np.max(np.abs(audio)))
+peak_dbfs = 20 * np.log10(max(peak, 1e-12))
+print(f"Saved umik1_30_seconds.wav. Peak: {peak_dbfs:.1f} dBFS.")
+if peak >= 0.99:
+    print("Possible clipping: reduce the input level and record again.")
